@@ -5,9 +5,10 @@
 ## 在线访问
 
 - GitHub Pages：<https://laishengli120.github.io/txt-chapter-cleaner/>
-- CDN 备用入口：<https://cdn.jsdelivr.net/gh/laishengli120/txt-chapter-cleaner@main/index.html>
+- 第三方 HTML 预览备用：<https://raw.githack.com/laishengli120/txt-chapter-cleaner/main/index.html>
+- CDN 下载备用：<https://cdn.jsdelivr.net/gh/laishengli120/txt-chapter-cleaner@main/index.html>
 
-如果国内访问 GitHub Pages 不稳定，可以优先尝试 CDN 备用入口；也可以下载 `index.html` 后直接双击本地打开，功能完全离线可用。
+如果国内访问 GitHub Pages 不稳定，可以尝试第三方 HTML 预览备用地址；如果 CDN 下载地址在浏览器里显示源码，请另存为 `index.html` 后本地打开。工具功能完全离线可用。
 
 ## 使用
 
