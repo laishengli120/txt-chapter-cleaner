@@ -443,10 +443,33 @@
     .page-button.current { color: var(--red); border-color: var(--red); }
     .page-button:disabled { color: #b2bac3; background: #f4f6f7; }
 
-    .compare-grid { height: 100%; min-height: 700px; display: grid; grid-template-columns: 1fr 1fr; }
+    .local-comparison { border-bottom: 1px solid var(--line); background: #fff; }
+    .local-comparison-head {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .local-comparison-head strong { display: block; font-size: 11px; }
+    .local-comparison-head span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .local-comparison-hint { flex: 0 0 auto; color: var(--faint); font-size: 9px; }
+    .local-comparison-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
     .compare-pane { min-width: 0; display: flex; flex-direction: column; }
     .compare-pane + .compare-pane { border-left: 1px solid var(--line); }
-    .pane-head { min-height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background: #fafbfd; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 700; }
+    .pane-head { min-height: 34px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background: #fafbfd; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 9px; font-weight: 700; }
+    .local-preview { height: 166px; padding: 8px 10px; overflow: auto; font-family: var(--reading); font-size: 11px; line-height: 1.65; }
+    .local-preview-line { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 8px; padding: 2px 6px; border-radius: 4px; }
+    .local-preview-line b { color: var(--faint); font-family: var(--ui); font-size: 9px; font-weight: 500; text-align: right; }
+    .local-preview-line span { min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .local-preview-line.focus.delete { color: #a64b45; background: #fff0ee; text-decoration: line-through; }
+    .local-preview-line.focus.merge { color: #4662bb; background: var(--blue-soft); }
+    .local-preview-line.focus.normalize { color: #7e621f; background: #fff7df; }
+    .local-preview-line.focus.after { color: var(--green); background: var(--green-soft); font-weight: 700; }
+    .local-preview-note { margin: 3px 6px 7px; padding: 7px 9px; border-radius: 5px; color: #a64b45; background: #fff0ee; font-family: var(--ui); font-size: 9px; }
+    .local-preview-empty { height: 100%; display: grid; place-items: center; padding: 18px; color: var(--faint); text-align: center; font-family: var(--ui); font-size: 10px; }
     .document-preview {
       min-height: 0;
       flex: 1;
@@ -459,10 +482,6 @@
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
-    .preview-delete { color: #a64b45; background: #fff0ee; text-decoration: line-through; }
-    .preview-normalize { color: #7e621f; background: #fff7df; }
-    .preview-merge { color: #4662bb; background: var(--blue-soft); }
-    .preview-focus { outline: 2px solid rgba(196, 56, 48, .42); outline-offset: 2px; border-radius: 2px; }
     .output-view { height: 100%; min-height: 700px; display: flex; flex-direction: column; }
     .output-note { padding: 10px 16px; color: var(--green); background: var(--green-soft); border-bottom: 1px solid #d6eadf; font-size: 10px; }
 
@@ -650,9 +669,9 @@
       .change-row .before-value { grid-column: 1 / -1; }
       .change-row .change-arrow { display: none; }
       .change-row .after-value { grid-column: 1 / -1; padding-top: 6px; border-top: 1px dashed var(--line); }
-      .compare-grid { grid-template-columns: 1fr; }
-      .compare-pane { min-height: 380px; }
+      .local-comparison-grid { grid-template-columns: 1fr; }
       .compare-pane + .compare-pane { border-left: 0; border-top: 1px solid var(--line); }
+      .local-preview { height: 150px; }
       .dialog-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 2fr) minmax(140px, 1fr); }
       .test-preview { border-left: 0; border-top: 1px solid var(--line); }
       .custom-rule {
@@ -758,8 +777,7 @@
 
     <section class="result-workspace" aria-labelledby="resultTitle">
       <div class="result-tabs" role="tablist" aria-label="结果视图">
-        <button class="result-tab" type="button" role="tab" data-view="changes" aria-selected="true">修改明细 <span class="tab-count" id="changeTabCount"></span></button>
-        <button class="result-tab" type="button" role="tab" data-view="compare" aria-selected="false">对照预览</button>
+        <button class="result-tab" type="button" role="tab" data-view="changes" aria-selected="true">修改与对照 <span class="tab-count" id="changeTabCount"></span></button>
         <button class="result-tab" type="button" role="tab" data-view="output" aria-selected="false">清理结果</button>
       </div>
 
@@ -786,6 +804,22 @@
           <select class="compact-select" id="chapterFilter" aria-label="按章节筛选"><option value="all">全部章节</option></select>
           <input class="search-input" id="changeSearch" type="search" placeholder="搜索修改内容" aria-label="搜索修改内容">
         </div>
+        <section class="local-comparison" aria-labelledby="localCompareTitle">
+          <div class="local-comparison-head">
+            <div><strong id="localCompareTitle">局部对照</strong><span id="localCompareMeta">选择一条修改查看清理位置上下文</span></div>
+            <div class="local-comparison-hint">显示改动位置上下各 3 行</div>
+          </div>
+          <div class="local-comparison-grid">
+            <article class="compare-pane">
+              <div class="pane-head"><span>清理前</span><span>改动行会按类型标记</span></div>
+              <div class="local-preview" id="beforePreview"><div class="local-preview-empty">暂无局部预览</div></div>
+            </article>
+            <article class="compare-pane">
+              <div class="pane-head"><span>清理后</span><span>仅显示对应位置附近内容</span></div>
+              <div class="local-preview" id="afterPreview"><div class="local-preview-empty">暂无局部预览</div></div>
+            </article>
+          </div>
+        </section>
         <div class="ledger-head" aria-hidden="true">
           <span>源行号</span><span>规则</span><span>修改前</span><span></span><span>修改后</span><span>状态</span>
         </div>
@@ -800,19 +834,6 @@
               <option value="100">100</option>
             </select>
           </label>
-        </div>
-      </div>
-
-      <div class="result-view" id="compareView" hidden>
-        <div class="compare-grid">
-          <article class="compare-pane">
-            <div class="pane-head"><span>清理前</span><span>红色删除 · 蓝色合并 · 黄色规范</span></div>
-            <pre class="document-preview" id="beforePreview"></pre>
-          </article>
-          <article class="compare-pane">
-            <div class="pane-head"><span>清理后</span><span id="previewLimit"></span></div>
-            <pre class="document-preview" id="afterPreview"></pre>
-          </article>
         </div>
       </div>
 
@@ -934,9 +955,9 @@
         "privacyNote", "copyButton", "downloadButton", "fileTab", "pasteTab", "filePanel", "pastePanel",
         "fileInput", "dropzone", "dropTitle", "dropMeta", "pasteInput", "customState", "presetCopy",
         "ruleGroups", "selectSafeRules", "customRulesButton", "customRuleCount", "processButton", "emptyView",
-        "changesView", "compareView", "outputView", "changeTabCount", "kindFilters", "ruleFilter", "chapterFilter",
+        "changesView", "outputView", "changeTabCount", "kindFilters", "ruleFilter", "chapterFilter",
         "changeSearch", "changeList", "changeRange", "pageControls", "pageSize", "beforePreview", "afterPreview",
-        "outputPreview", "previewLimit", "chapterNav", "contextTitle", "contextLines", "customDialog",
+        "localCompareTitle", "localCompareMeta", "outputPreview", "chapterNav", "contextTitle", "contextLines", "customDialog",
         "closeCustomDialog", "cancelCustomRules", "saveCustomRules", "addCustomRule", "customRuleList",
         "customTestResult", "toast"
       ].forEach(function (id) { elements[id] = document.getElementById(id); });
@@ -951,6 +972,7 @@
         encoding: "",
         settings: savedSettings,
         result: null,
+        sourceLines: [],
         outputLines: [],
         activeView: "changes",
         filterKind: "all",
@@ -960,8 +982,6 @@
         page: 1,
         pageSize: 25,
         selectedChangeId: null,
-        isNavigatingPreview: false,
-        previewNavigationTimer: 0,
         customDraft: [],
         toastTimer: 0
       };
@@ -1718,17 +1738,18 @@
       function resetResult() {
         state.result = null;
         document.body.classList.remove("has-result");
+        state.sourceLines = [];
         state.outputLines = [];
         elements.headerResult.hidden = true;
         elements.copyButton.disabled = true;
         elements.downloadButton.disabled = true;
         elements.emptyView.hidden = false;
         elements.changesView.hidden = true;
-        elements.compareView.hidden = true;
         elements.outputView.hidden = true;
         elements.changeTabCount.textContent = "";
         elements.chapterNav.innerHTML = '<div class="no-matches">清理后按章节显示改动分布</div>';
         elements.contextLines.innerHTML = '<div class="no-matches">选择一条修改查看上下文</div>';
+        renderLocalComparison(null);
       }
 
       function markResultStale() {
@@ -1760,7 +1781,8 @@
           var started = performance.now();
           try {
             state.result = cleanNovel(source, getProcessingOptions());
-            state.outputLines = state.result.text.split("\n");
+            state.sourceLines = normalizeNewlines(source).split("\n");
+            state.outputLines = state.result.text ? state.result.text.split("\n") : [];
             state.filterKind = "all";
             state.filterRule = "all";
             state.filterChapter = "all";
@@ -1799,7 +1821,6 @@
         renderKindCounts();
         renderChangeList();
         renderChapterNav();
-        renderComparison();
         renderOutput();
       }
 
@@ -1810,12 +1831,7 @@
         });
         elements.emptyView.hidden = true;
         elements.changesView.hidden = view !== "changes";
-        elements.compareView.hidden = view !== "compare";
         elements.outputView.hidden = view !== "output";
-        if (view === "compare" && state.result) {
-          var selected = state.result.changes.find(function (change) { return change.id === state.selectedChangeId; });
-          if (selected) requestAnimationFrame(function () { scrollComparisonToChange(selected); });
-        }
       }
 
       function renderKindCounts() {
@@ -1881,6 +1897,10 @@
 
       function renderChangeList() {
         var filtered = filteredChanges();
+        if (filtered.length && !filtered.some(function (change) { return change.id === state.selectedChangeId; })) {
+          state.selectedChangeId = filtered[0].id;
+          renderSelectedChange(filtered[0]);
+        }
         var totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
         state.page = Math.min(Math.max(1, state.page), totalPages);
         var start = (state.page - 1) * state.pageSize;
@@ -1939,12 +1959,13 @@
         if (!change) return;
         renderChangeList();
         renderChapterNav();
-        renderContext(change);
+        renderSelectedChange(change);
       }
 
       function renderChapterNav() {
         if (!state.result || !state.result.changes.length) {
           elements.chapterNav.innerHTML = '<div class="no-matches">没有需要导航的改动</div>';
+          renderLocalComparison(null);
           return;
         }
         var groups = new Map();
@@ -1967,15 +1988,66 @@
             state.filterChapter = button.dataset.chapter;
             state.page = 1;
             elements.chapterFilter.value = state.filterChapter;
-            var first = state.result.changes.find(function (change) { return change.chapter === state.filterChapter; });
+            var first = filteredChanges()[0] || state.result.changes.find(function (change) { return change.chapter === state.filterChapter; });
             if (first) state.selectedChangeId = first.id;
             renderChangeList();
             renderChapterNav();
-            if (first) renderContext(first);
-            if (first && state.activeView === "compare") scrollComparisonToChange(first);
+            if (first) renderSelectedChange(first);
           });
         });
-        if (selected) renderContext(selected);
+        if (selected) renderSelectedChange(selected);
+      }
+
+      function renderSelectedChange(change) {
+        renderLocalComparison(change);
+        renderContext(change);
+      }
+
+      function localPreviewLines(lines, start, end, focusStart, focusEnd, kind, after) {
+        var html = [];
+        for (var index = start; index < end; index++) {
+          var focused = index >= focusStart && index <= focusEnd;
+          var classes = "local-preview-line" + (focused ? " focus " + (after ? "after" : kind) : "");
+          html.push('<div class="' + classes + '"><b>' + formatNumber(index + 1) + '</b><span>' + escapeHtml(lines[index] || "（空行）") + "</span></div>");
+        }
+        return html.join("");
+      }
+
+      function renderLocalComparison(change) {
+        if (!change) {
+          elements.localCompareTitle.textContent = "局部对照";
+          elements.localCompareMeta.textContent = "选择一条修改查看清理位置上下文";
+          elements.beforePreview.innerHTML = '<div class="local-preview-empty">暂无局部预览</div>';
+          elements.afterPreview.innerHTML = '<div class="local-preview-empty">暂无局部预览</div>';
+          return;
+        }
+        var ruleNames = change.ruleIds.map(function (id) { return RULE_LABELS[id] || id; }).join("、");
+        elements.localCompareTitle.textContent = "局部对照 · " + change.chapter;
+        elements.localCompareMeta.textContent = "源行 " + formatNumber(change.sourceStart) + " · " + ruleNames + " · " + statusLabel(change.kind);
+
+        var sourceStart = Math.max(0, change.sourceStart - 1 - 3);
+        var sourceEnd = Math.min(state.sourceLines.length, change.sourceEnd + 3);
+        elements.beforePreview.innerHTML = localPreviewLines(
+          state.sourceLines, sourceStart, sourceEnd, change.sourceStart - 1, change.sourceEnd - 1, change.kind, false
+        );
+
+        if (!state.outputLines.length) {
+          elements.afterPreview.innerHTML = '<div class="local-preview-note">对应内容已删除，清理后没有可显示的文本。</div>';
+          return;
+        }
+        var outputCenter = Math.max(0, Math.min(state.outputLines.length - 1, (change.outputLine || 1) - 1));
+        var outputStart = Math.max(0, outputCenter - 3);
+        var outputEnd = Math.min(state.outputLines.length, outputCenter + 4);
+        var outputHtml = localPreviewLines(
+          state.outputLines, outputStart, outputEnd,
+          change.after == null ? -1 : outputCenter,
+          change.after == null ? -1 : outputCenter,
+          change.kind, true
+        );
+        if (change.after == null) {
+          outputHtml = '<div class="local-preview-note">该行已删除；以下为删除位置附近保留的内容。</div>' + outputHtml;
+        }
+        elements.afterPreview.innerHTML = outputHtml;
       }
 
       function renderContext(change) {
@@ -1994,49 +2066,10 @@
         elements.contextLines.innerHTML = html.join("");
       }
 
-      function centerPreviewOnTarget(preview, target) {
-        if (!target) return false;
-        target.classList.add("preview-focus");
-        preview.scrollTop = Math.max(0, target.offsetTop - (preview.clientHeight - target.offsetHeight) / 2);
-        return true;
-      }
-
-      function scrollComparisonToChange(change) {
-        if (!change || state.activeView !== "compare") return;
-        elements.beforePreview.querySelectorAll(".preview-focus").forEach(function (target) { target.classList.remove("preview-focus"); });
-        elements.afterPreview.querySelectorAll(".preview-focus").forEach(function (target) { target.classList.remove("preview-focus"); });
-        var beforeTarget = elements.beforePreview.querySelector('[data-change-id="' + change.id + '"]');
-        var afterTarget = change.outputLine == null ? null : elements.afterPreview.querySelector('[data-output-line="' + change.outputLine + '"]');
-        state.isNavigatingPreview = true;
-        clearTimeout(state.previewNavigationTimer);
-        var foundBefore = centerPreviewOnTarget(elements.beforePreview, beforeTarget);
-        var foundAfter = centerPreviewOnTarget(elements.afterPreview, afterTarget);
-        state.previewNavigationTimer = setTimeout(function () { state.isNavigatingPreview = false; }, 120);
-        if (!foundBefore && !foundAfter) showToast("对应内容超出当前预览范围");
-      }
-
       function truncateAtLine(text) {
         if (text.length <= PREVIEW_LIMIT) return { text: text, truncated: false };
         var cut = text.lastIndexOf("\n", PREVIEW_LIMIT);
         return { text: text.slice(0, cut > PREVIEW_LIMIT * .75 ? cut : PREVIEW_LIMIT), truncated: true };
-      }
-
-      function renderComparison() {
-        var source = truncateAtLine(normalizeNewlines(getActiveText()));
-        var sourceLines = source.text.split("\n");
-        var changeMap = new Map();
-        state.result.changes.forEach(function (change) { changeMap.set(change.sourceStart - 1, change); });
-        elements.beforePreview.innerHTML = sourceLines.map(function (line, index) {
-          var change = changeMap.get(index);
-          var safe = escapeHtml(line || " ");
-          if (!change) return safe;
-          return '<span class="preview-' + change.kind + '" data-change-id="' + escapeHtml(change.id) + '">' + safe + "</span>";
-        }).join("\n") + (source.truncated ? '\n<span class="no-matches">预览已截断，修改明细仍包含完整记录</span>' : "");
-        var after = truncateAtLine(state.result.text);
-        elements.afterPreview.innerHTML = after.text.split("\n").map(function (line, index) {
-          return '<span data-output-line="' + (index + 1) + '">' + escapeHtml(line || " ") + "</span>";
-        }).join("\n");
-        elements.previewLimit.textContent = after.truncated ? "显示前 6 万字符" : "";
       }
 
       function renderOutput() {
@@ -2261,12 +2294,6 @@
           testCustomRule(index);
         }
       });
-      elements.beforePreview.addEventListener("scroll", function () {
-        if (state.activeView !== "compare" || state.isNavigatingPreview) return;
-        var ratio = elements.beforePreview.scrollTop / Math.max(1, elements.beforePreview.scrollHeight - elements.beforePreview.clientHeight);
-        elements.afterPreview.scrollTop = ratio * Math.max(0, elements.afterPreview.scrollHeight - elements.afterPreview.clientHeight);
-      });
-
       buildRuleGroups();
       updatePresetUI();
       updateProcessButton();
